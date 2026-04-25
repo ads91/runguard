@@ -87,7 +87,6 @@ generate_report(2)  # runs (different input)
 * scripts that may be triggered multiple times
 * cron jobs / schedulers
 * API endpoints with side effects
-* AI-generated workflows
 * anything that “should not run twice”
 
 ---
