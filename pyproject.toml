@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "runguard"
+version = "0.1.0"
+description = "Make Python functions safe to run more than once"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "Your Name" }]
+license = { text = "MIT" }
+
+dependencies = [
+    "loguru"
+]
+
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
