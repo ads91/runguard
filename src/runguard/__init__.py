@@ -3,6 +3,8 @@ import json
 import time
 import hashlib
 import functools
+
+from loguru import logger
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -12,6 +14,7 @@ LOCK_FILE = Path(".once_lock")
 
 
 class FileLock(object):
+
     def __enter__(self):
         while True:
             try:
@@ -33,14 +36,20 @@ def _load_state():
     return {}
 
 
-def _save_state(state):
+def _save_state(
+        state
+):
     tmp = STATE_FILE.with_suffix(".tmp")
     with open(tmp, "w") as f:
         json.dump(state, f, indent=2)
     os.replace(tmp, STATE_FILE)  # atomic write
 
 
-def _hash_call(fn, args, kwargs):
+def _hash_call(
+        fn,
+        args,
+        kwargs
+):
     raw = json.dumps(
         [fn.__module__, fn.__name__, args, kwargs],
         sort_keys=True,
@@ -49,7 +58,11 @@ def _hash_call(fn, args, kwargs):
     return hashlib.sha256(raw.encode()).hexdigest()
 
 
-def _next_window(now, schedule, ttl_seconds):
+def _next_window(
+        now,
+        schedule,
+        ttl_seconds
+):
     if ttl_seconds:
         return now + timedelta(seconds=ttl_seconds)
 
@@ -67,11 +80,12 @@ def _next_window(now, schedule, ttl_seconds):
 
 
 def once(
-        schedule="daily", ttl_seconds=None
+        schedule="daily",
+        ttl_seconds=None
 ):
     """
         schedule: 'hourly', 'daily', 'weekly'
-        OR
+            OR
         ttl_seconds: int
     """
 
@@ -89,11 +103,11 @@ def once(
                     expires_at = datetime.fromisoformat(entry["expires_at"])
 
                     if now < expires_at:
-                        print(f"[SKIP] {fn.__name__} (cached)")
+                        logger.info(f"[SKIP] {fn.__name__} (cached)")
                         return entry.get("result")
 
                 # run function
-                print(f"[RUN] {fn.__name__}")
+                logger.debug(f"[RUN] {fn.__name__}")
                 result = fn(*args, **kwargs)
 
                 expires_at = _next_window(now, schedule, ttl_seconds)

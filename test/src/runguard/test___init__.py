@@ -2,17 +2,15 @@ import time
 import os
 import json
 import multiprocessing
-from pathlib import Path
-
 import pytest
 
 from runguard import once
+from pathlib import Path
+
 
 STATE_FILE = Path(".once_state.json")
 LOCK_FILE = Path(".once_lock")
 
-
-# ---------- Helpers ----------
 
 def cleanup():
     if STATE_FILE.exists():
@@ -28,7 +26,6 @@ def run_around_tests():
     cleanup()
 
 
-# ---------- Basic behaviour ----------
 def test_runs_once_per_day():
     calls = {"count": 0}
 
@@ -42,7 +39,6 @@ def test_runs_once_per_day():
     assert calls["count"] == 1
 
 
-# ---------- Per-input behaviour ----------
 def test_runs_per_input():
     calls = {"count": 0}
 
@@ -58,7 +54,6 @@ def test_runs_per_input():
     assert calls["count"] == 2
 
 
-# ---------- TTL expiry ----------
 def test_ttl_expiry():
     calls = {"count": 0}
 
@@ -76,7 +71,6 @@ def test_ttl_expiry():
     assert calls["count"] == 2
 
 
-# ---------- Result caching ----------
 def test_returns_cached_result():
     @once(schedule="daily")
     def fn():
@@ -88,7 +82,6 @@ def test_returns_cached_result():
     assert r1 == r2
 
 
-# ---------- Cross-process safety ----------
 def _worker(counter_file):
     from runguard import once
 
@@ -127,7 +120,6 @@ def test_cross_process_single_execution(tmp_path):
     assert count == 1
 
 
-# ---------- State file integrity ----------
 def test_state_file_created():
     @once(schedule="daily")
     def fn():
@@ -143,7 +135,6 @@ def test_state_file_created():
     assert len(data) == 1
 
 
-# ---------- Handles exceptions (should not cache failure) ----------
 def test_exception_does_not_cache():
     calls = {"count": 0}
 
