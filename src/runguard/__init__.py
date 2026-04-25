@@ -90,6 +90,7 @@ def guard(
     """
 
     def decorator(fn):
+
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             now = datetime.utcnow()
