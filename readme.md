@@ -38,9 +38,9 @@ pip install runguard  # (or drop the file into your project)
 ## Quick Example
 
 ```python
-from runguard import once
+from runguard import guard
 
-@once(schedule="daily")
+@guard(schedule="daily")
 def generate_report(user_id):
     print("Running expensive job...")
     return {"user": user_id}
@@ -67,9 +67,9 @@ generate_report(2)  # runs (different input)
 ### Daily / Hourly / Weekly
 
 ```python
-@once(schedule="daily")
-@once(schedule="hourly")
-@once(schedule="weekly")
+@guard(schedule="daily")
+@guard(schedule="hourly")
+@guard(schedule="weekly")
 ```
 
 ---
@@ -77,7 +77,7 @@ generate_report(2)  # runs (different input)
 ### Custom TTL
 
 ```python
-@once(ttl_seconds=600)  # once every 10 minutes
+@guard(ttl_seconds=600)  # once every 10 minutes
 ```
 
 ---

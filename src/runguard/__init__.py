@@ -9,8 +9,8 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 
-STATE_FILE = Path(".once_state.json")
-LOCK_FILE = Path(".once_lock")
+STATE_FILE = Path(".guard_state.json")
+LOCK_FILE = Path(".guard_lock")
 
 
 class FileLock(object):
@@ -79,7 +79,7 @@ def _next_window(
     raise ValueError("Invalid schedule")
 
 
-def once(
+def guard(
         schedule="daily",
         ttl_seconds=None
 ):
