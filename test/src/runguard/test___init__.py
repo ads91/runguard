@@ -4,12 +4,12 @@ import json
 import multiprocessing
 import pytest
 
-from runguard import once
+from runguard import guard
 from pathlib import Path
 
 
-STATE_FILE = Path(".once_state.json")
-LOCK_FILE = Path(".once_lock")
+STATE_FILE = Path(".guard_state.json")
+LOCK_FILE = Path(".guard_lock")
 
 
 def cleanup():
@@ -29,7 +29,7 @@ def run_around_tests():
 def test_runs_once_per_day():
     calls = {"count": 0}
 
-    @once(schedule="daily")
+    @guard(schedule="daily")
     def fn():
         calls["count"] += 1
         return 123
@@ -42,7 +42,7 @@ def test_runs_once_per_day():
 def test_runs_per_input():
     calls = {"count": 0}
 
-    @once(schedule="daily")
+    @guard(schedule="daily")
     def fn(x):
         calls["count"] += 1
         return x
@@ -57,7 +57,7 @@ def test_runs_per_input():
 def test_ttl_expiry():
     calls = {"count": 0}
 
-    @once(ttl_seconds=1)
+    @guard(ttl_seconds=1)
     def fn():
         calls["count"] += 1
 
@@ -72,7 +72,7 @@ def test_ttl_expiry():
 
 
 def test_returns_cached_result():
-    @once(schedule="daily")
+    @guard(schedule="daily")
     def fn():
         return {"value": 42}
 
@@ -83,9 +83,9 @@ def test_returns_cached_result():
 
 
 def _worker(counter_file):
-    from runguard import once
+    from runguard import guard
 
-    @once(ttl_seconds=60)
+    @guard(ttl_seconds=60)
     def fn():
         # increment shared counter file
         if not os.path.exists(counter_file):
@@ -121,7 +121,7 @@ def test_cross_process_single_execution(tmp_path):
 
 
 def test_state_file_created():
-    @once(schedule="daily")
+    @guard(schedule="daily")
     def fn():
         return 1
 
@@ -138,7 +138,7 @@ def test_state_file_created():
 def test_exception_does_not_cache():
     calls = {"count": 0}
 
-    @once(schedule="daily")
+    @guard(schedule="daily")
     def fn():
         calls["count"] += 1
         raise ValueError("fail")
