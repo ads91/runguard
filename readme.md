@@ -82,7 +82,7 @@ generate_report(2)  # runs (different input)
 
 ---
 
-## Intended Use
+## Intended Usage
 
 * scripts that may be triggered multiple times
 * cron jobs / schedulers
