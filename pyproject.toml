@@ -4,11 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "runguard"
-version = "0.1.0"
+version = "0.1.1"
 description = "Make Python functions safe to run more than once"
 readme = "README.md"
 requires-python = ">=3.8"
-authors = [{ name = "Your Name" }]
+authors = [{ name = "Andrew Sanderson" }]
 license = { text = "MIT" }
 
 dependencies = [
@@ -20,3 +20,7 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+
+[project.urls]
+Homepage = "https://github.com/ads91/runguard"
+Repository = "https://github.com/ads91/runguard"
