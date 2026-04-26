@@ -13,5 +13,7 @@ jobs:
         with:
           python-version: "3.10"
 
+      - run: pip install -U pip
       - run: pip install pytest
+      - run: pip install -e .
       - run: pytest
