@@ -5,7 +5,7 @@ import multiprocessing
 import logging
 import pytest
 
-from runguard import guard
+from runguard import guard, invalidate_cache
 from runguard import guard as exported_guard
 from pathlib import Path
 
@@ -191,3 +191,43 @@ def test_custom_state_path_creates_lock_near_state(tmp_path):
 
     # lock should be cleaned up after execution
     assert not expected_lock_file.exists()
+
+
+def test_invalidate_specific_cache_entry():
+    calls = {"count": 0}
+
+    @guard(schedule="daily")
+    def fn(x):
+        calls["count"] += 1
+        return x
+
+    assert fn(1) == 1
+    assert fn(1) == 1
+    assert calls["count"] == 1
+
+    removed = invalidate_cache(fn=fn, args=(1,))
+    assert removed == 1
+
+    assert fn(1) == 1
+    assert calls["count"] == 2
+
+
+def test_invalidate_all_cache_entries():
+    calls = {"count": 0}
+
+    @guard(schedule="daily")
+    def fn(x):
+        calls["count"] += 1
+        return x
+
+    fn(1)
+    fn(2)
+    assert calls["count"] == 2
+
+    # both are cached, so this should remove two entries
+    removed = invalidate_cache()
+    assert removed == 2
+
+    fn(1)
+    fn(2)
+    assert calls["count"] == 4
