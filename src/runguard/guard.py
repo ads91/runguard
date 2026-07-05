@@ -3,14 +3,15 @@ import json
 import time
 import hashlib
 import functools
+import logging
 
-from loguru import logger
 from datetime import datetime, timedelta
 from pathlib import Path
 
 
 STATE_FILE = Path(".guard_state.json")
 LOCK_FILE = Path(".guard_lock")
+logger = logging.getLogger(__name__)
 
 
 class FileLock(object):

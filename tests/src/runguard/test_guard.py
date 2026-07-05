@@ -2,9 +2,11 @@ import time
 import os
 import json
 import multiprocessing
+import logging
 import pytest
 
 from runguard import guard
+from runguard import guard as exported_guard
 from pathlib import Path
 
 
@@ -151,3 +153,10 @@ def test_exception_does_not_cache():
         fn()
 
     assert calls["count"] == 2
+
+
+def test_uses_stdlib_logger_by_default():
+    assert exported_guard.__module__ == "runguard.guard"
+
+    module = __import__(exported_guard.__module__, fromlist=["logger"])
+    assert isinstance(module.logger, logging.Logger)
