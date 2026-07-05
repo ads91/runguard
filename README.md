@@ -96,6 +96,24 @@ invalidate_cache(fn=generate_report, args=(1,))
 invalidate_cache()
 ```
 
+### Command Line Invalidation
+
+```bash
+# remove all entries from default state file
+python -m runguard invalidate
+
+# remove all entries from a custom state file
+python -m runguard invalidate --state-path /var/tmp/myapp/runguard-state.json
+
+# remove one specific cached call signature
+python -m runguard invalidate \
+    --module myapp.jobs \
+    --function generate_report \
+    --args '[1]' \
+    --kwargs '{}' \
+    --state-path /var/tmp/myapp/runguard-state.json
+```
+
 ---
 
 ## Intended Usage
