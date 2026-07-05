@@ -5,7 +5,11 @@ import hashlib
 import functools
 import logging
 
-from datetime import datetime, timedelta
+from datetime import (
+    datetime, 
+    timedelta, 
+    timezone
+)
 from pathlib import Path
 
 
@@ -98,6 +102,50 @@ def _next_window(
     raise ValueError("Invalid schedule")
 
 
+def _parse_expires_at(value):
+    expires_at = datetime.fromisoformat(value)
+    if expires_at.tzinfo is None:
+        # Backward compatibility for existing cache files with naive timestamps.
+        return expires_at.replace(tzinfo=timezone.utc)
+    return expires_at
+
+
+def invalidate_cache(
+        fn=None, 
+        args=None, 
+        kwargs=None, 
+        state_path=None
+):
+    """
+        Invalidate cached entries.
+
+        If fn is None, all entries are removed.
+        If fn is provided, only the entry for the provided fn/args/kwargs is removed.
+        
+        Returns the number of removed entries.
+    """
+    state_file, lock_file = _resolve_paths(state_path)
+
+    with FileLock(lock_file):
+        state = _load_state(state_file)
+        if not state:
+            return 0
+
+        if fn is None:
+            removed = len(state)
+            state = {}
+            _save_state(state, state_file)
+            return removed
+
+        key = _hash_call(fn, args or (), kwargs or {})
+        removed = 1 if key in state else 0
+        if removed:
+            del state[key]
+            _save_state(state, state_file)
+
+        return removed
+
+
 def guard(
     schedule="daily",
     ttl_seconds=None,
@@ -113,7 +161,7 @@ def guard(
 
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             key = _hash_call(fn, args, kwargs)
             state_file, lock_file = _resolve_paths(state_path)
 
@@ -122,7 +170,7 @@ def guard(
                 entry = state.get(key)
 
                 if entry:
-                    expires_at = datetime.fromisoformat(entry["expires_at"])
+                    expires_at = _parse_expires_at(entry["expires_at"])
 
                     if now < expires_at:
                         logger.info(f"[SKIP] {fn.__name__} (cached)")

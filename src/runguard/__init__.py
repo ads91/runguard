@@ -1,3 +1,3 @@
-from .guard import guard
+from .guard import guard, invalidate_cache
 
-__all__ = ["guard"]
+__all__ = ["guard", "invalidate_cache"]

@@ -80,6 +80,40 @@ generate_report(2)  # runs (different input)
 @guard(ttl_seconds=600)  # once every 10 minutes
 ```
 
+### Cache Invalidation
+
+```python
+from runguard import guard, invalidate_cache
+
+@guard(schedule="daily")
+def generate_report(user_id):
+    return {"user": user_id}
+
+# remove one cached call signature
+invalidate_cache(fn=generate_report, args=(1,))
+
+# remove all cached entries
+invalidate_cache()
+```
+
+### Command Line Invalidation
+
+```bash
+# remove all entries from default state file
+python -m runguard invalidate
+
+# remove all entries from a custom state file
+python -m runguard invalidate --state-path /var/tmp/myapp/runguard-state.json
+
+# remove one specific cached call signature
+python -m runguard invalidate \
+    --module myapp.jobs \
+    --function generate_report \
+    --args '[1]' \
+    --kwargs '{}' \
+    --state-path /var/tmp/myapp/runguard-state.json
+```
+
 ---
 
 ## Intended Usage
@@ -95,7 +129,6 @@ generate_report(2)  # runs (different input)
 
 * SQLite / Redis backend
 * async support
-* manual invalidation
 * "run but don’t cache result" mode
 
 ---
