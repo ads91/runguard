@@ -16,34 +16,52 @@ logger = logging.getLogger(__name__)
 
 class FileLock(object):
 
+    def __init__(self, lock_file):
+        self.lock_file = Path(lock_file)
+
     def __enter__(self):
+        self.lock_file.parent.mkdir(parents=True, exist_ok=True)
         while True:
             try:
                 # atomic create
-                self.fd = os.open(LOCK_FILE, os.O_CREAT | os.O_EXCL | os.O_RDWR)
+                self.fd = os.open(self.lock_file, os.O_CREAT | os.O_EXCL | os.O_RDWR)
                 return self
             except FileExistsError:
                 time.sleep(0.05)
 
     def __exit__(self, exc_type, exc, tb):
         os.close(self.fd)
-        os.unlink(LOCK_FILE)
+        if self.lock_file.exists():
+            os.unlink(self.lock_file)
 
 
-def _load_state():
-    if STATE_FILE.exists():
-        with open(STATE_FILE, "r") as f:
+def _resolve_paths(state_path):
+    if state_path is None:
+        state_file = STATE_FILE
+        lock_file = LOCK_FILE
+    else:
+        state_file = Path(state_path)
+        lock_file = state_file.with_suffix(f"{state_file.suffix}.lock")
+
+    return state_file, lock_file
+
+
+def _load_state(state_file):
+    if state_file.exists():
+        with open(state_file, "r") as f:
             return json.load(f)
     return {}
 
 
 def _save_state(
-        state
+        state,
+        state_file
 ):
-    tmp = STATE_FILE.with_suffix(".tmp")
+    state_file.parent.mkdir(parents=True, exist_ok=True)
+    tmp = state_file.with_suffix(".tmp")
     with open(tmp, "w") as f:
         json.dump(state, f, indent=2)
-    os.replace(tmp, STATE_FILE)  # atomic write
+    os.replace(tmp, state_file)  # atomic write
 
 
 def _hash_call(
@@ -81,8 +99,9 @@ def _next_window(
 
 
 def guard(
-        schedule="daily",
-        ttl_seconds=None
+    schedule="daily",
+    ttl_seconds=None,
+    state_path=None
 ):
     """
         schedule: 'hourly', 'daily', 'weekly'
@@ -96,9 +115,10 @@ def guard(
         def wrapper(*args, **kwargs):
             now = datetime.utcnow()
             key = _hash_call(fn, args, kwargs)
+            state_file, lock_file = _resolve_paths(state_path)
 
-            with FileLock():
-                state = _load_state()
+            with FileLock(lock_file):
+                state = _load_state(state_file)
                 entry = state.get(key)
 
                 if entry:
@@ -119,7 +139,7 @@ def guard(
                     "result": result,
                 }
 
-                _save_state(state)
+                _save_state(state, state_file)
 
                 return result
 

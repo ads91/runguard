@@ -160,3 +160,34 @@ def test_uses_stdlib_logger_by_default():
 
     module = __import__(exported_guard.__module__, fromlist=["logger"])
     assert isinstance(module.logger, logging.Logger)
+
+
+def test_custom_state_path(tmp_path):
+    custom_state_file = tmp_path / "runguard" / "state.json"
+    calls = {"count": 0}
+
+    @guard(schedule="daily", state_path=custom_state_file)
+    def fn():
+        calls["count"] += 1
+        return 7
+
+    assert fn() == 7
+    assert fn() == 7
+    assert calls["count"] == 1
+
+    assert custom_state_file.exists()
+    assert not STATE_FILE.exists()
+
+
+def test_custom_state_path_creates_lock_near_state(tmp_path):
+    custom_state_file = tmp_path / "nested" / "state.json"
+    expected_lock_file = custom_state_file.with_suffix(".json.lock")
+
+    @guard(ttl_seconds=60, state_path=custom_state_file)
+    def fn():
+        return 1
+
+    fn()
+
+    # lock should be cleaned up after execution
+    assert not expected_lock_file.exists()
